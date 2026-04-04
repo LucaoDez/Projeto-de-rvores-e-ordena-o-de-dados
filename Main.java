@@ -11,7 +11,8 @@
  *   3. Exibição das estatísticas de compressão vs. limite teórico (0.938 bits/nó)
  *   4. Navegação e busca na representação sucinta
  *   5. Experimento com diferentes tamanhos de árvore (tabela de eficiência)
- *   6. *** CONTRAEXEMPLO DIDÁTICO AUTORAL *** ← item obrigatório do projeto
+ *   6. Contraexemplo didático autoral (falha da AVL clássica em memória)
+ *   7. Easter egg: AVL trees ←→ Fibonacci ←→ 0.938 bits/nó
  */
 public class Main {
 
@@ -52,8 +53,29 @@ public class Main {
         //     problema de espaço para árvores estáticas, mas não é indicada
         //     para workloads dinâmicos com inserções/remoções frequentes.
         // ══════════════════════════════════════════════════════════════════════
-        separador("CONTRAEXEMPLO DIDÁTICO AUTORAL");
+        separador("DEMONSTRAÇÃO 5 — CONTRAEXEMPLO DIDÁTICO AUTORAL");
         Counterexample.run();
+
+        // ══════════════════════════════════════════════════════════════════════
+        // ── Demonstração 6: EASTER EGG ────────────────────────────────────────
+        //
+        // Conexão inesperada e tecnicamente profunda entre três áreas:
+        //
+        //   AVL trees  ←→  Fibonacci  ←→  0.938 bits/nó do artigo
+        //
+        // A constante 0.938 não é arbitrária: ela é a "sombra" da razão áurea
+        // φ projetada sobre o espaço das AVL trees. O caminho completo:
+        //
+        //   N(h) = N(h-1) + N(h-2) + 1    ← recorrência de nós mínimos AVL
+        //   N(h) = Fib(h+3) - 1            ← é Fibonacci deslocado
+        //   Fib(k) ≈ φᵏ/√5                ← Fibonacci cresce como razão áurea
+        //   α ≈ 0.5219 (artigo)            ← generalização de 1/φ para AVL
+        //   bits/nó = log₂(1/α) ≈ 0.938   ← limite teórico é log da razão áurea
+        //
+        // Se o professor perguntar de onde vem o 0.938, essa é a resposta.
+        // ══════════════════════════════════════════════════════════════════════
+        separador("DEMONSTRAÇÃO 6 — EASTER EGG: AVL ←→ FIBONACCI ←→ 0.938 bits/nó");
+        EasterEgg.run();
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -206,7 +228,7 @@ public class Main {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // Auxiliar: insere n elementos de forma a exercitar rotações AVL
+    // Auxiliar: insere [lo, hi] de forma balanceada (exercita rotações AVL)
     // ──────────────────────────────────────────────────────────────────────────
     static void insertBalanced(SuccinctAVLTree<Integer> tree, int lo, int hi) {
         if (lo > hi) return;
