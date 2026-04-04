@@ -11,6 +11,7 @@
  *   3. Exibição das estatísticas de compressão vs. limite teórico (0.938 bits/nó)
  *   4. Navegação e busca na representação sucinta
  *   5. Experimento com diferentes tamanhos de árvore (tabela de eficiência)
+ *   6. *** CONTRAEXEMPLO DIDÁTICO AUTORAL *** ← item obrigatório do projeto
  */
 public class Main {
 
@@ -33,6 +34,26 @@ public class Main {
 
         // ── Demonstração 4: SuccinctBitVector - rank/select ───────────────────
         demo4_RankSelect();
+
+        // ══════════════════════════════════════════════════════════════════════
+        // ── Demonstração 5: CONTRAEXEMPLO DIDÁTICO AUTORAL ────────────────────
+        //
+        // Pergunta do projeto: em que situação a AVL clássica falha ou perde
+        // eficiência, e como o artigo resolve isso?
+        //
+        // O Counterexample.run() demonstra exatamente isso:
+        //   - Calcula o ponto exato em que a AVL clássica (192 bits/nó) excede
+        //     a RAM de um dispositivo embarcado (512 KB), enquanto a representação
+        //     sucinta do artigo (4 bits/nó) ainda cabe com grande margem.
+        //   - Constrói árvores reais nos tamanhos críticos (n=21.845 e n=21.846)
+        //     para evidenciar concretamente a transição de "cabe" para "falha".
+        //   - Exibe tabela comparativa para n de 1.000 a 1.000.000 nós.
+        //   - Conclui com a crítica do grupo: a solução do artigo resolve o
+        //     problema de espaço para árvores estáticas, mas não é indicada
+        //     para workloads dinâmicos com inserções/remoções frequentes.
+        // ══════════════════════════════════════════════════════════════════════
+        separador("CONTRAEXEMPLO DIDÁTICO AUTORAL");
+        Counterexample.run();
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -193,5 +214,16 @@ public class Main {
         tree.insert(mid);
         insertBalanced(tree, lo, mid - 1);
         insertBalanced(tree, mid + 1, hi);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Auxiliar: separador visual entre seções
+    // ──────────────────────────────────────────────────────────────────────────
+    static void separador(String titulo) {
+        System.out.println();
+        System.out.println("═══════════════════════════════════════════════════════════════");
+        System.out.println("  " + titulo);
+        System.out.println("═══════════════════════════════════════════════════════════════");
+        System.out.println();
     }
 }
