@@ -1,1 +1,1 @@
-A inteligência artificial nete projeto foi utilizada para criar e auxiliar na criação do código baseado no artigo "Succinct encodings of binary trees with application to AVL trees".
+A inteligência artificial neste projeto foi utilizada para criar e auxiliar na criação do código baseado no artigo "Succinct encodings of binary trees with application to AVL trees".
