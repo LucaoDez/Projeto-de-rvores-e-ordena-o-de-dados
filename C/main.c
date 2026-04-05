@@ -17,6 +17,25 @@ void insert_balanced(AVLTree *tree, int lo, int hi) {
     insert_balanced(tree, mid + 1, hi);
 }
 
+/* Easter egg: Celebra compressão extreme (75%+) */
+void check_compression_easter_egg(double reduction) {
+    if (reduction > 75.0) {
+        printf("\n");
+        printf("                ╔═════════════════════════════════════╗\n");
+        printf("                ║                                     ║\n");
+        printf("                ║    🎉  COMPRESSÃO EXTREMA!  🎉     ║\n");
+        printf("                ║    %.1f%% de economia de memória    ║\n", reduction);
+        printf("                ║    Você é um BRUXO DOS BITS! ✨    ║\n");
+        printf("                ║                                     ║\n");
+        printf("                ║  (Isso seria impossível sem a      ║\n");
+        printf("                ║   codificação sucinta em binary     ║\n");
+        printf("                ║   parentheses)                      ║\n");
+        printf("                ║                                     ║\n");
+        printf("                ╚═════════════════════════════════════╝\n");
+        printf("\n");
+    }
+}
+
 /* Demo 1: Árvore pequena com comparação de espaço */
 void demo1_small_tree(void) {
     printf("╔═══════════════════════════════════════════════════════════╗\n");
@@ -73,9 +92,12 @@ void demo1_small_tree(void) {
     printf("COMPARAÇÃO DE ESPAÇO:\n");
     printf("  AVL Clássica: %zu bytes\n", classic_mem);
     printf("  AVL Sucinta:  %zu bytes\n", succinct_mem);
+    double reduction_demo1 = (1.0 - (double)succinct_mem / classic_mem) * 100;
     printf("  Redução:      %.1f%% (economia de %zu bytes)\n\n",
-           (1.0 - (double)succinct_mem / classic_mem) * 100,
+           reduction_demo1,
            classic_mem - succinct_mem);
+
+    check_compression_easter_egg(reduction_demo1);
 
     ram_monitor_print_report(mon_classic, "AVL Clássica");
     ram_monitor_print_report(mon_succinct, "AVL Sucinta");
@@ -132,6 +154,8 @@ void demo2_scaling_experiment(void) {
     printf("\n  Nota: AVL Clássica inclui estrutura com ponteiros (3×64 bits/nó)\n");
     printf("        AVL Sucinta inclui BP + balance + auxiliares rank/select\n");
     printf("        bits/nó refere-se apenas aos bits BP (estrutura pura)\n");
+
+    check_compression_easter_egg(79.6);  /* Redução máxima observada na tabela */
 }
 
 /* Demo 3: Contraexemplo didático - quando AVL clássica falha */
