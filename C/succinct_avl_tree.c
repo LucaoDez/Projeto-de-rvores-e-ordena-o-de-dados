@@ -226,7 +226,7 @@ int succinct_avl_tree_find_close(SuccinctAVLTree *tree, int p) {
     if (!tree->encoded || p < 1 || p > tree->bp_bits->length) return -1;
 
     int depth = 1;
-    for (int i = p; i < tree->bp_bits->length; i++) {
+    for (int i = p - 1; i < tree->bp_bits->length; i++) {
         if (succinct_bit_vector_get(tree->bp_bits, i)) {
             depth++;
         } else {
