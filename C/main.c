@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 #include "avl_tree.h"
 #include "succinct_avl_tree.h"
 #include "ram_monitor.h"
@@ -32,6 +33,40 @@ void check_compression_easter_egg(double reduction) {
         printf("                ║   parentheses)                      ║\n");
         printf("                ║                                     ║\n");
         printf("                ╚═════════════════════════════════════╝\n");
+        printf("\n");
+    }
+}
+
+/* Easter egg: Celebra a proporção áurea em AVL (limite teórico) */
+void check_golden_ratio_easter_egg(int n, double bits_per_node) {
+    /* O limite de 0.938 vem de log2(φ) + entropia dos fatores AVL */
+    double phi = (1.0 + sqrt(5.0)) / 2.0;
+    double structural_lower_bound = log2(phi);
+    double avl_lower_bound = 0.938;
+    double gap = bits_per_node - avl_lower_bound;
+
+    if (n == 63 && bits_per_node > 1.5) {
+        printf("\n");
+        printf(" ╔═══════════════════════════════════════════════════════════╗\n");
+        printf(" ║          🔷  EASTER EGG: O LIMITE DE OURO  🔷            ║\n");
+        printf(" ╠═══════════════════════════════════════════════════════════╣\n");
+        printf(" ║ φ = (1+√5)/2 = 1.618f (número de ouro)                   ║\n");
+        printf(" ║ log₂(φ) = %.3lf (lower bound estrutural)                 ║\n", structural_lower_bound);
+        printf(" ║ Limite teórico (com fatores AVL) = %.3lf bits/nó        ║\n", avl_lower_bound);
+        printf(" ║                                                           ║\n");
+        printf(" ║ Sua implementação usa %.3lf bits/nó (nó maior complexity)║\n", bits_per_node);
+        printf(" ║ Gap até o limite = %.3lf bits/nó                         ║\n", gap);
+        printf(" ║                                                           ║\n");
+        printf(" ║ ESSA É A RAZÃO DO LIMITE 0.938 — não é arbitrária!      ║\n");
+        printf(" ║ ESSA é a razão do limite 0.938 — não é arbitrária!      ║\n");
+        printf(" ║ Sua implementação usa 4.4f bits/nó (BP puro).            ║\n");
+        printf(" ║ Gap até o limite: 4.4f bits/nó                          ║\n");
+        printf(" ║ (Gap existe pois BP não é ótimo — DFUDS chegaria)        ║\n");
+        printf(" ║ (mas com MAIOR complexidade.)                            ║\n");
+        printf(" ║                                                           ║\n");
+        printf(" ║ 🎓  O artigo prova que isso é TEORICAMENTE ÓTIMO!        ║\n");
+        printf(" ║                                                           ║\n");
+        printf(" ╚═══════════════════════════════════════════════════════════╝\n");
         printf("\n");
     }
 }
@@ -146,6 +181,8 @@ void demo2_scaling_experiment(void) {
 
         printf("  %-5d │ %12zu │ %10zu │ %6d │ %5.1f%% │ %7.3f\n",
                actual_n, classic_mem, succinct_mem, bp_bits, reduction, bits_per_node);
+
+        check_golden_ratio_easter_egg(actual_n, bits_per_node);
 
         avl_tree_destroy(classic);
         succinct_avl_tree_destroy(succinct);
