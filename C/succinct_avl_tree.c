@@ -7,9 +7,10 @@ static int count_nodes(AVLNode *node);
 static void encode_node(AVLNode *node, bool *bp, bool *balance,
                         int *bp_idx, int *val_idx);
 static void print_inorder_rec(AVLNode *node);
-static int left_child_bp(SuccinctAVLTree *tree, int p);
-static int right_child_bp(SuccinctAVLTree *tree, int p);
-static int left_subtree_size(SuccinctAVLTree *tree, int bp_pos);
+static int first_child_bp(SuccinctAVLTree *tree, int p);
+static int left_child_bp(SuccinctAVLTree *tree, int p, int node_idx);
+static int right_child_bp(SuccinctAVLTree *tree, int p, int node_idx);
+static int subtree_size_from_bp(SuccinctAVLTree *tree, int bp_pos);
 static int search_node(SuccinctAVLTree *tree, int bp_pos, int node_idx, int value);
 static void fill_values_preorder(AVLNode *node, int *values, int *idx);
 
@@ -163,35 +164,65 @@ int succinct_avl_tree_get_value(SuccinctAVLTree *tree, int node_idx) {
     return tree->node_values[node_idx];
 }
 
+
+
 /* Iteração sobre filho esquerdo na representação BP */
-static int left_child_bp(SuccinctAVLTree *tree, int p) {
+/* Primeiro filho em pré-ordem na representação BP */
+static int first_child_bp(SuccinctAVLTree *tree, int p) {
     if (p < 1 || p > tree->bp_bits->length) return -1;
+
     int next = p + 1;
-    if (next > tree->bp_bits->length || !succinct_bit_vector_get(tree->bp_bits, next - 1)) {
+    if (next > tree->bp_bits->length ||
+        !succinct_bit_vector_get(tree->bp_bits, next - 1)) {
         return -1;
     }
+
     return next;
 }
 
-/* Iteração sobre filho direito na representação BP */
-static int right_child_bp(SuccinctAVLTree *tree, int p) {
-    int lc = left_child_bp(tree, p);
-    if (lc == -1) return -1;
-    int close_lc = succinct_avl_tree_find_close(tree, lc);
+/*
+ * Nesta codificação BP sem marcadores nulos, o primeiro filho em pré-ordem
+ * pode ser o filho esquerdo OU o direito.
+ * Como a árvore é BST e os valores estão em pré-ordem, usamos os valores
+ * para desambiguar.
+ */
+static int left_child_bp(SuccinctAVLTree *tree, int p, int node_idx) {
+    int child = first_child_bp(tree, p);
+    if (child == -1 || node_idx + 1 >= tree->node_count) return -1;
+
+    return (tree->node_values[node_idx + 1] < tree->node_values[node_idx])
+        ? child
+        : -1;
+}
+
+static int right_child_bp(SuccinctAVLTree *tree, int p, int node_idx) {
+    int child = first_child_bp(tree, p);
+    if (child == -1 || node_idx + 1 >= tree->node_count) return -1;
+
+    /* Se o primeiro filho já for maior que o nó atual, ele é o filho direito */
+    if (tree->node_values[node_idx + 1] > tree->node_values[node_idx]) {
+        return child;
+    }
+
+    /* Caso contrário, o primeiro filho é o esquerdo; o direito vem depois */
+    int close_lc = succinct_avl_tree_find_close(tree, child);
     if (close_lc == -1 || close_lc + 1 > tree->bp_bits->length) return -1;
     if (!succinct_bit_vector_get(tree->bp_bits, close_lc)) return -1;
+
     return close_lc + 1;
 }
 
-/* Tamanho da subárvore esquerda */
-static int left_subtree_size(SuccinctAVLTree *tree, int bp_pos) {
-    int lc = left_child_bp(tree, bp_pos);
-    if (lc == -1) return 0;
-    int close_lc = succinct_avl_tree_find_close(tree, lc);
-    if (close_lc == -1) return 0;
-    return succinct_bit_vector_rank1(tree->bp_bits, close_lc) -
-           succinct_bit_vector_rank1(tree->bp_bits, lc - 1);
+static int subtree_size_from_bp(SuccinctAVLTree *tree, int bp_pos) {
+    if (bp_pos == -1) return 0;
+
+    int close_pos = succinct_avl_tree_find_close(tree, bp_pos);
+    if (close_pos == -1) return 0;
+
+    return succinct_bit_vector_rank1(tree->bp_bits, close_pos) -
+           succinct_bit_vector_rank1(tree->bp_bits, bp_pos - 1);
 }
+
+/* Tamanho da subárvore esquerda */
 
 /* Busca recursiva na representação sucinta */
 static int search_node(SuccinctAVLTree *tree, int bp_pos, int node_idx, int value) {
@@ -204,19 +235,23 @@ static int search_node(SuccinctAVLTree *tree, int bp_pos, int node_idx, int valu
         return node_idx;
     }
 
-    if (node_val > value) {
+    if (value < node_val) {
         /* Vai para filho esquerdo */
-        int lc = left_child_bp(tree, bp_pos);
+        int lc = left_child_bp(tree, bp_pos, node_idx);
         return (lc == -1) ? -1 : search_node(tree, lc, node_idx + 1, value);
     } else {
         /* Vai para filho direito */
-        int rc = right_child_bp(tree, bp_pos);
+        int rc = right_child_bp(tree, bp_pos, node_idx);
         if (rc == -1) return -1;
-        int lc_size = left_subtree_size(tree, bp_pos);
-        return search_node(tree, rc, node_idx + lc_size + 1, value);
+
+        int lc = left_child_bp(tree, bp_pos, node_idx);
+        int next_idx = (lc == -1)
+            ? (node_idx + 1)
+            : (node_idx + subtree_size_from_bp(tree, lc) + 1);
+
+        return search_node(tree, rc, next_idx, value);
     }
 }
-
 int succinct_avl_tree_search(SuccinctAVLTree *tree, int value) {
     if (!tree->encoded || tree->node_count == 0) return -1;
     return search_node(tree, 1, 0, value);
@@ -226,7 +261,7 @@ int succinct_avl_tree_find_close(SuccinctAVLTree *tree, int p) {
     if (!tree->encoded || p < 1 || p > tree->bp_bits->length) return -1;
 
     int depth = 1;
-    for (int i = p - 1; i < tree->bp_bits->length; i++) {
+    for (int i = p; i < tree->bp_bits->length; i++) {
         if (succinct_bit_vector_get(tree->bp_bits, i)) {
             depth++;
         } else {
